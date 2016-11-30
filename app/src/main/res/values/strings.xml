@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">PhotoPuzzle</string>
+    <string name="action_settings">Settings</string>
+    <string name="facebook_app_id">202674696851316</string>
+    <string name="picture_path">/sdcard/Pictures/PicPuzzle/</string>
+    <string name="game_level">Puzzle Size</string>
+
+    <string-array name="puzzle_sizes">
+        <item>3 X 3</item>
+        <item>4 X 4</item>
+    </string-array>
+</resources>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_game_medium"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.raapgames.puzzlegame.Game_medium"
+    android:gravity="center">
+
+    <RelativeLayout
+        android:orientation="vertical"
+        android:layout_height="wrap_content"
+        android:id="@+id/GameField_med"
+        android:layout_width="fill_parent"
+        android:layout_above="@+id/btn"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="16dp">
+        <Button android:id="@+id/mButton01" android:layout_height="300px" android:layout_width="300px" android:layout_x="50px" android:layout_y="0px" android:text="1" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button"/>
+        <Button android:id="@+id/mButton02" android:layout_height="300px" android:layout_width="300px" android:layout_x="350px" android:layout_y="0px" android:text="2" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button"/>
+        <Button android:id="@+id/mButton03" android:layout_height="300px" android:layout_width="300px" android:layout_x="650px" android:layout_y="0px" android:text="3" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button"/>
+        <Button android:id="@+id/mButton04" android:layout_height="300px" android:layout_width="300px" android:layout_x="950px" android:layout_y="0px" android:text="4" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button"/>
+        <Button android:id="@+id/mButton05" android:layout_height="300px" android:layout_width="300px" android:layout_x="50px" android:layout_y="300px" android:text="5" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button"/>
+        <Button android:id="@+id/mButton06" android:layout_height="300px" android:layout_width="300px" android:layout_x="350px" android:layout_y="300px" android:text="6" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button"/>
+        <Button android:id="@+id/mButton07" android:layout_height="300px" android:layout_width="300px" android:layout_x="650px" android:layout_y="300px" android:text="7" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button"/>
+        <Button android:id="@+id/mButton08" android:layout_height="300px" android:layout_width="300px" android:layout_x="950px" android:layout_y="300px" android:text="8" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button"/>
+        <Button android:id="@+id/mButton09" android:layout_height="300px" android:layout_width="300px" android:layout_x="50px" android:layout_y="600px" android:text="9" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button"/>
+        <Button android:id="@+id/mButton10" android:layout_height="300px" android:layout_width="300px" android:layout_x="350px" android:layout_y="600px" android:text="10" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button"/>
+        <Button android:id="@+id/mButton11" android:layout_height="300px" android:layout_width="300px" android:layout_x="650px" android:layout_y="600px" android:text="11" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button"/>
+        <Button android:id="@+id/mButton12" android:layout_height="300px" android:layout_width="300px" android:layout_x="950px" android:layout_y="600px" android:text="12" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button"/>
+        <Button android:id="@+id/mButton13" android:layout_height="300px" android:layout_width="300px" android:layout_x="50px" android:layout_y="900px" android:text="13" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button"/>
+        <Button android:id="@+id/mButton14" android:layout_height="300px" android:layout_width="300px" android:layout_x="350px" android:layout_y="900px" android:text="14" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button"/>
+        <Button android:id="@+id/mButton15" android:layout_height="300px" android:layout_width="300px" android:layout_x="650px" android:layout_y="900px" android:text="15" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button"/>
+        <Button android:id="@+id/mButton16" android:layout_height="300px" android:layout_width="300px" android:layout_x="950px" android:layout_y="900px" android:text="15" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button_green"/>
+    </RelativeLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/mMoveText"
+        android:textSize="70px"
+        android:text="Moves made : "
+        android:layout_marginTop="51dp"
+        android:layout_below="@+id/GameField_med"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginLeft="56dp"
+        android:layout_marginStart="56dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/mMoveCounter"
+        android:text="0"
+        android:textSize="70px"
+        android:layout_alignTop="@+id/mMoveText"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="79dp"
+        android:layout_marginEnd="79dp"
+        android:layout_toRightOf="@+id/mMoveText"
+        android:layout_toEndOf="@+id/mMoveText" />
+
+</RelativeLayout>

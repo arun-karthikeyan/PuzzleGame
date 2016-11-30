@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_game"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.raapgames.puzzlegame.Game_small">
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/btn"
+        android:src="@drawable/info_icon"
+        android:background="@android:color/transparent"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/MoveCounter"
+        android:text="0"
+        android:textSize="70px"
+        android:layout_alignBaseline="@+id/MoveText"
+        android:layout_alignBottom="@+id/MoveText"
+        android:layout_toRightOf="@+id/MoveText"
+        android:layout_toEndOf="@+id/MoveText" />
+
+    <RelativeLayout
+        android:orientation="vertical"
+        android:layout_height="wrap_content"
+        android:id="@+id/GameField"
+        android:layout_width="fill_parent"
+        android:layout_marginTop="131dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_centerHorizontal="true">
+        <Button android:id="@+id/Button01" android:layout_height="300px" android:layout_width="300px" android:layout_x="250px" android:layout_y="0px" android:text="1" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button"/>
+        <Button android:id="@+id/Button02" android:layout_height="300px" android:layout_width="300px" android:layout_x="550px" android:layout_y="0px" android:text="2" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button"/>
+        <Button android:id="@+id/Button03" android:layout_height="300px" android:layout_width="300px" android:layout_x="850px" android:layout_y="0px" android:text="3" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button"/>
+        <Button android:id="@+id/Button04" android:layout_height="300px" android:layout_width="300px" android:layout_x="250px" android:layout_y="300px" android:text="4" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button"/>
+        <Button android:id="@+id/Button05" android:layout_height="300px" android:layout_width="300px" android:layout_x="550px" android:layout_y="300px" android:text="5" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button"/>
+        <Button android:id="@+id/Button06" android:layout_height="300px" android:layout_width="300px" android:layout_x="850px" android:layout_y="300px" android:text="6" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button"/>
+        <Button android:id="@+id/Button07" android:layout_height="300px" android:layout_width="300px" android:layout_x="250px" android:layout_y="600px" android:text="7" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button"/>
+        <Button android:id="@+id/Button08" android:layout_height="300px" android:layout_width="300px" android:layout_x="550px" android:layout_y="600px" android:text="8" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button"/>
+        <Button android:id="@+id/Button09" android:layout_height="300px" android:layout_width="300px" android:layout_x="850px" android:layout_y="600px" android:text="9" android:textSize="75px" android:padding="0px" android:layout_margin="0px" android:background="@drawable/button_green"/>
+    </RelativeLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/MoveText"
+        android:textSize="70px"
+        android:text="Moves made : "
+        android:layout_above="@+id/btn"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="17dp" />
+</RelativeLayout>
