@@ -9,29 +9,51 @@ import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.games.multiplayer.Invitation;
+import com.google.android.gms.games.multiplayer.OnInvitationReceivedListener;
+import com.google.android.gms.games.multiplayer.realtime.RealTimeMessage;
+import com.google.android.gms.games.multiplayer.realtime.RealTimeMessageReceivedListener;
+import com.google.android.gms.games.multiplayer.realtime.Room;
+import com.google.android.gms.games.multiplayer.realtime.RoomStatusUpdateListener;
+import com.google.android.gms.games.multiplayer.realtime.RoomUpdateListener;
+
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.File;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.util.List;
 import java.util.UUID;
 
-public class HomeScreenActivity extends AppCompatActivity {
+public class HomeScreenActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
+        View.OnClickListener, RealTimeMessageReceivedListener,
+        RoomStatusUpdateListener, RoomUpdateListener, OnInvitationReceivedListener {
     public static int count = 0;
     private static final int WRITE_EXTERNAL_STORAGE_ID = 1;
     private static final int READ_EXTERNAL_STORAGE_ID = 2;
     private static final int CAMERA_ID = 3;
     private static final int INTERNET = 4;
     private Button singlePlayerButton;
-    private Button viewProfile;
+//    private Button viewProfile;
     private SharedPreferences userPref;
     private ProgressDialog progressDialog;
+
+    //client for interacting with Google APIs
+    private GoogleApiClient mGoogleApiClient;
+
+    // Has the user clicked the sign-in button?
+    private boolean mSignInClicked = false;
 
     public String getUserId()
     {
@@ -63,6 +85,122 @@ public class HomeScreenActivity extends AppCompatActivity {
         Log.d("Inside SyncDetails: ",new Boolean(result).toString());
         return result;
     }
+
+    @Override
+    public void onClick(View view) {
+
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
+
+    @Override
+    public void onInvitationReceived(Invitation invitation) {
+
+    }
+
+    @Override
+    public void onInvitationRemoved(String s) {
+
+    }
+
+    @Override
+    public void onRealTimeMessageReceived(RealTimeMessage realTimeMessage) {
+
+    }
+
+    @Override
+    public void onRoomConnecting(Room room) {
+
+    }
+
+    @Override
+    public void onRoomAutoMatching(Room room) {
+
+    }
+
+    @Override
+    public void onPeerInvitedToRoom(Room room, List<String> list) {
+
+    }
+
+    @Override
+    public void onPeerDeclined(Room room, List<String> list) {
+
+    }
+
+    @Override
+    public void onPeerJoined(Room room, List<String> list) {
+
+    }
+
+    @Override
+    public void onPeerLeft(Room room, List<String> list) {
+
+    }
+
+    @Override
+    public void onConnectedToRoom(Room room) {
+
+    }
+
+    @Override
+    public void onDisconnectedFromRoom(Room room) {
+
+    }
+
+    @Override
+    public void onPeersConnected(Room room, List<String> list) {
+
+    }
+
+    @Override
+    public void onPeersDisconnected(Room room, List<String> list) {
+
+    }
+
+    @Override
+    public void onP2PConnected(String s) {
+
+    }
+
+    @Override
+    public void onP2PDisconnected(String s) {
+
+    }
+
+    @Override
+    public void onRoomCreated(int i, Room room) {
+
+    }
+
+    @Override
+    public void onJoinedRoom(int i, Room room) {
+
+    }
+
+    @Override
+    public void onLeftRoom(int i, String s) {
+
+    }
+
+    @Override
+    public void onRoomConnected(int i, Room room) {
+
+    }
+
     class InitTasks extends AsyncTask<Integer, Integer, Integer>
     {
         @Override
@@ -162,7 +300,7 @@ public class HomeScreenActivity extends AppCompatActivity {
         this.requestNecessaryPermissions();
         setContentView(R.layout.activity_home_screen);
         singlePlayerButton = (Button) findViewById(R.id.single_player);
-        viewProfile = (Button) findViewById(R.id.profile);
+//        viewProfile = (Button) findViewById(R.id.profile);
         pref_init();
         new InitTasks().execute(0);
         singlePlayerButton.setOnClickListener(new View.OnClickListener(){
@@ -173,13 +311,13 @@ public class HomeScreenActivity extends AppCompatActivity {
                 startActivity(new Intent(getBaseContext(),PictureSelectActivity.class));
             }
         });
-        viewProfile.setOnClickListener(new View.OnClickListener(){
-
-            @Override
-            public void onClick(View view) {
-                startActivity(new Intent(getBaseContext(),ProfileActivity.class));
-            }
-        });
+//        viewProfile.setOnClickListener(new View.OnClickListener(){
+//
+//            @Override
+//            public void onClick(View view) {
+//                startActivity(new Intent(getBaseContext(),ProfileActivity.class));
+//            }
+//        });
     }
     public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults)
     {
