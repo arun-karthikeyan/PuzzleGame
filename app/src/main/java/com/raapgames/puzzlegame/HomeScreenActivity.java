@@ -6,6 +6,7 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -17,8 +18,12 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.games.Games;
 import com.google.android.gms.games.multiplayer.Invitation;
 import com.google.android.gms.games.multiplayer.OnInvitationReceivedListener;
 import com.google.android.gms.games.multiplayer.realtime.RealTimeMessage;
@@ -35,6 +40,9 @@ import java.net.URI;
 import java.net.URLDecoder;
 import java.util.List;
 import java.util.UUID;
+
+import static com.raapgames.puzzlegame.Constants.LOG_TAG;
+import static com.raapgames.puzzlegame.R.id.sign_in_activity;
 
 public class HomeScreenActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
         View.OnClickListener, RealTimeMessageReceivedListener,
@@ -62,17 +70,17 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
     public void pref_init()
     {
         userPref = getSharedPreferences(Constants.PREF_NAME,MODE_PRIVATE);
-        Log.d(Constants.LOG_TAG,"Instance of SharedPreference obtained");
+        Log.d(LOG_TAG,"Instance of SharedPreference obtained");
     }
     public boolean syncDetails(String user_id, String facebook_id, String facebook_name, String instId, String instName)
     {
         boolean result = false;
         URI targetUri = UriComponentsBuilder.fromUriString(Constants.REGISTRATION_URL).path(user_id).queryParam("fb_id",facebook_id).queryParam("fb_name",facebook_name)
                 .queryParam("instId",instId).queryParam("instName",instName).build().toUri();
-        Log.d(Constants.LOG_TAG,"URL: "+targetUri.toString());
+        Log.d(LOG_TAG,"URL: "+targetUri.toString());
         try
         {
-            Log.d(Constants.LOG_TAG,"NEW URL: "+URLDecoder.decode(targetUri.toString(),"UTF-8"));
+            Log.d(LOG_TAG,"NEW URL: "+URLDecoder.decode(targetUri.toString(),"UTF-8"));
             RestTemplate template = new RestTemplate(true);
             String response = template.getForObject(URLDecoder.decode(targetUri.toString(),"UTF-8"),String.class);
             if(response.equalsIgnoreCase(user_id))
@@ -93,17 +101,39 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
+        Log.d(LOG_TAG, "onConnected() called. Sign in successful!");
+
+        Log.d(LOG_TAG, "Sign-in succeeded.");
+        //switch screens to sign-in-activity
+        setContentView(R.layout.sign_in_activity);
+
+        //might have to move onclick for signout logic somewhere else
+
+        //set onclick listener for signout button
+        findViewById(R.id.sign_out_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //start the signout flow
+                Log.d(LOG_TAG, "Sign-out button clicked");
+                mSignInClicked = false;
+                Games.signOut(mGoogleApiClient);
+                mGoogleApiClient.disconnect();
+                //need to set view back to start screen
+                setContentView(R.layout.activity_home_screen); //might have to make sure logic works
+            }
+        });
 
     }
 
     @Override
     public void onConnectionSuspended(int i) {
-
+        Log.d(LOG_TAG, "onConnectionSuspended() called. Trying to reconnect.");
+        mGoogleApiClient.connect();
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
+        Log.d(LOG_TAG, "onConnectionFailed() called, result: " + connectionResult);
     }
 
     @Override
@@ -201,6 +231,24 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
 
     }
 
+    @Override
+    public void onStart() {
+        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+            Log.w(LOG_TAG,
+                    "GameHelper: client was already connected on onStart()");
+        } else {
+            Log.d(LOG_TAG,"Connecting client.");
+            mGoogleApiClient.connect();
+        }
+        super.onStart();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        mGoogleApiClient.disconnect();
+    }
+
     class InitTasks extends AsyncTask<Integer, Integer, Integer>
     {
         @Override
@@ -211,19 +259,19 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
             publishProgress(count);
             if(!picsFolder.exists())
             {
-                Log.d(Constants.LOG_TAG,"Creating Picture folder");
+                Log.d(LOG_TAG,"Creating Picture folder");
                 picsFolder.mkdirs();
             }
-            Log.d(Constants.LOG_TAG,picsFolder.getAbsolutePath());
+            Log.d(LOG_TAG,picsFolder.getAbsolutePath());
             publishProgress(++count);
 
             String user_id, facebook_id, facebook_name, instId, instName;
             if(!userPref.contains(Constants.IS_DATA_SYNCED) || !userPref.getBoolean(Constants.IS_DATA_SYNCED,false))
             {
-                Log.d(Constants.LOG_TAG,"Sync not happened");
+                Log.d(LOG_TAG,"Sync not happened");
                 user_id = userPref.getString(Constants.PREF_USER_ID,null);
                 user_id = user_id == null?getUserId():user_id;
-                Log.d(Constants.LOG_TAG,"userId: "+user_id);
+                Log.d(LOG_TAG,"userId: "+user_id);
                 facebook_id = userPref.getString(Constants.PREF_FB_ID,null);
                 facebook_name = userPref.getString(Constants.PREF_FB_NAME,null);
                 instId = userPref.getString(Constants.PREF_INST_ID,null);
@@ -250,7 +298,7 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
             }
             else
             {
-                Log.d(Constants.LOG_TAG,"Sync already happened");
+                Log.d(LOG_TAG,"Sync already happened");
                 count+=3;
                 publishProgress(count);
             }
@@ -294,8 +342,7 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
     }
     @Override
     @RequiresApi(api = Build.VERSION_CODES.M)
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.requestNecessaryPermissions();
         setContentView(R.layout.activity_home_screen);
@@ -303,12 +350,11 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
 //        viewProfile = (Button) findViewById(R.id.profile);
         pref_init();
         new InitTasks().execute(0);
-        singlePlayerButton.setOnClickListener(new View.OnClickListener(){
+        singlePlayerButton.setOnClickListener(new View.OnClickListener() {
 
             @Override
-            public void onClick(View view)
-            {
-                startActivity(new Intent(getBaseContext(),PictureSelectActivity.class));
+            public void onClick(View view) {
+                startActivity(new Intent(getBaseContext(), PictureSelectActivity.class));
             }
         });
 //        viewProfile.setOnClickListener(new View.OnClickListener(){
@@ -318,33 +364,53 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
 //                startActivity(new Intent(getBaseContext(),ProfileActivity.class));
 //            }
 //        });
+
+        // Create the Google Api Client with access to Games
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(Games.API).addScope(Games.SCOPE_GAMES)
+                .build();
+
+        //set onclick listener for google signin button
+        findViewById(R.id.button_sign_in).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // start the sign-in flow
+                Log.d(LOG_TAG, "Sign-in button clicked");
+                mSignInClicked = true;
+                mGoogleApiClient.connect();
+            }
+        });
+
+
     }
     public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults)
     {
         if(grantResults.length==0 || !(grantResults[0] == PackageManager.PERMISSION_GRANTED))
         {
-            Log.d(Constants.LOG_TAG,"The necessary permissions are not acquired: "+requestCode);
+            Log.d(LOG_TAG,"The necessary permissions are not acquired: "+requestCode);
             this.finish();
         }
         switch (requestCode)
         {
             case WRITE_EXTERNAL_STORAGE_ID: {
-                Log.d(Constants.LOG_TAG, "Write External Storage Permissions Granted");
+                Log.d(LOG_TAG, "Write External Storage Permissions Granted");
                 break;
             }
             case READ_EXTERNAL_STORAGE_ID: {
-                Log.d(Constants.LOG_TAG, "Read External Storage Permissions Granted");
+                Log.d(LOG_TAG, "Read External Storage Permissions Granted");
                 break;
             }
             case CAMERA_ID: {
-                Log.d(Constants.LOG_TAG, "Camera Permissions Granted");
+                Log.d(LOG_TAG, "Camera Permissions Granted");
                 break;
             }
             case INTERNET:{
-                Log.d(Constants.LOG_TAG,"Internet Permission Granted");
+                Log.d(LOG_TAG,"Internet Permission Granted");
             }
             default:
-                Log.d(Constants.LOG_TAG,"Unknown Permissions Granted");
+                Log.d(LOG_TAG,"Unknown Permissions Granted");
         }
     }
     @Override
