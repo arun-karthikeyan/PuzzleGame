@@ -31,6 +31,7 @@ import com.google.android.gms.games.multiplayer.realtime.RealTimeMessageReceived
 import com.google.android.gms.games.multiplayer.realtime.Room;
 import com.google.android.gms.games.multiplayer.realtime.RoomStatusUpdateListener;
 import com.google.android.gms.games.multiplayer.realtime.RoomUpdateListener;
+import com.google.example.games.basegameutils.BaseGameUtils;
 
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -62,6 +63,16 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
 
     // Has the user clicked the sign-in button?
     private boolean mSignInClicked = false;
+
+    // Are we currently resolving a connection failure?
+    private boolean mResolvingConnectionFailure = false;
+
+    // Set to true to automatically start the sign in flow when the Activity starts.
+    // Set to false to require the user to click the button in order to sign in.
+    private boolean mAutoStartSignInFlow = true;
+
+    // Request code used to invoke sign in user interactions.
+    private static final int RC_SIGN_IN = 9001;
 
     public String getUserId()
     {
@@ -134,6 +145,20 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         Log.d(LOG_TAG, "onConnectionFailed() called, result: " + connectionResult);
+
+        if (mResolvingConnectionFailure) {
+            Log.d(LOG_TAG, "onConnectionFailed() ignoring connection failure; already resolving.");
+            return;
+        }
+
+        if (mSignInClicked || mAutoStartSignInFlow) {
+            mAutoStartSignInFlow = false;
+            mSignInClicked = false;
+            mResolvingConnectionFailure = BaseGameUtils.resolveConnectionFailure(this, mGoogleApiClient,
+                    connectionResult, RC_SIGN_IN, getString(R.string.signin_other_error));
+        }
+
+//        switchToScreen(R.id.screen_sign_in);
     }
 
     @Override
