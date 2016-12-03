@@ -15,4 +15,4 @@ Works easier in ubuntu. Access a openshift application using rhc client (can be 
 To connect to db do the following
 1. use rhc port-forward -a photopuzzle.
 ---It will give you a local ip adress and a port number to connect to.
-2. Connect to the address directly using mysql command.
+2. Connect to the local address directly using mysql command.
