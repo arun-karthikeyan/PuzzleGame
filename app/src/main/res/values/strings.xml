@@ -5,6 +5,7 @@
     <string name="picture_path">/sdcard/Pictures/PicPuzzle/</string>
     <string name="game_level">Puzzle Size</string>
     <string name="signin_other_error">There was an issue with sign in. Please try again later.</string>
+    <string name="please_wait">Please wait&#8230;</string>
 
     <string-array name="puzzle_sizes">
         <item>3 X 3</item>
