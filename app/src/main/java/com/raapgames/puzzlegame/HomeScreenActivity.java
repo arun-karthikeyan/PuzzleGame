@@ -89,7 +89,8 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
     // This array lists everything that's clickable, so we can install click
     // event handlers.
     final static int[] CLICKABLES = {
-            R.id.practice_button, R.id.sign_in_button, R.id.sign_out_button
+            R.id.practice_button, R.id.sign_in_button, R.id.sign_out_button, R.id.button_invite_friends, R.id.button_quick_game,
+            R.id.button_timed_challenge, R.id.button_see_invitations
     };
 
     // how long until the game ends (seconds)
@@ -167,6 +168,22 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
                 Games.signOut(mGoogleApiClient);
                 mGoogleApiClient.disconnect();
                 switchToScreen(R.id.sign_in_screen);
+                break;
+
+            case R.id.button_invite_friends:
+                Log.d(LOG_TAG, "Invite friends button clicked");
+                break;
+
+            case R.id.button_quick_game:
+                Log.d(LOG_TAG, "Quick Game button clicked");
+                break;
+
+            case R.id.button_timed_challenge:
+                Log.d(LOG_TAG, "Timed Challenge button clicked");
+                break;
+
+            case R.id.button_see_invitations:
+                Log.d(LOG_TAG, "See Invitations button clicked");
                 break;
 
         }

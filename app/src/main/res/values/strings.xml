@@ -6,7 +6,16 @@
     <string name="game_level">Puzzle Size</string>
     <string name="signin_other_error">There was an issue with sign in. Please try again later.</string>
     <string name="please_wait">Please wait&#8230;</string>
-
+    <string name="quick_game">Quick Game</string>
+    <string name="game_blurb">A sample game that tests your ability to quickly solve a puzzle.</string>
+    <string name="quick_game_explanation">Challenge a random opponent.</string>
+    <string name="timed_challenge">Timed Challenge</string>
+    <string name="timed_challenge_explanation">Try to solve the puzzle within the given time</string>
+    <string name="invite_friends">Invite Friends</string>
+    <string name="invite_friends_explanation">Get friends to join so you can play multiplayer</string>
+    <string name="see_invitations">See Invitations</string>
+    <string name="see_invitations_explanation">See if you have any invites from friends</string>
+    <string name="practice">Practice</string>
     <string-array name="puzzle_sizes">
         <item>3 X 3</item>
         <item>4 X 4</item>
