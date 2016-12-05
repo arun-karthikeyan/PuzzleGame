@@ -16,6 +16,8 @@
     <string name="see_invitations">See Invitations</string>
     <string name="see_invitations_explanation">See if you have any invites from friends</string>
     <string name="practice">Practice</string>
+    <string name="practice_explanation">Hone your skills without restrictions in practice mode</string>
+    <string name="google_sign_in_explanation">Sign in to Google-Play-Games to unlock the full game</string>
     <string-array name="puzzle_sizes">
         <item>3 X 3</item>
         <item>4 X 4</item>

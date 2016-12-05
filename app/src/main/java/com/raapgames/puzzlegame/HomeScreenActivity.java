@@ -89,7 +89,7 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
     // This array lists everything that's clickable, so we can install click
     // event handlers.
     final static int[] CLICKABLES = {
-            R.id.practice_button, R.id.sign_in_button, R.id.sign_out_button, R.id.button_invite_friends, R.id.button_quick_game,
+            R.id.practice_button_1, R.id.practice_button_2, R.id.sign_in_button, R.id.sign_out_button, R.id.button_invite_friends, R.id.button_quick_game,
             R.id.button_timed_challenge, R.id.button_see_invitations
     };
 
@@ -156,7 +156,8 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
                 mGoogleApiClient.connect();
                 break;
 
-            case R.id.practice_button:
+            case R.id.practice_button_1:
+            case R.id.practice_button_2:
                 //start picture select activity
                 Log.d(LOG_TAG, "Practice Button Clicked -> PictureSelectActivity starting..");
                 startActivity(new Intent(getBaseContext(), PictureSelectActivity.class));
@@ -403,6 +404,7 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
             Log.w(LOG_TAG,
                     "GameHelper: client was already connected on onStart()");
+            switchToMainScreen();
         } else {
             Log.d(LOG_TAG,"Connecting client.");
             mGoogleApiClient.connect();
@@ -431,8 +433,10 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
         if (mRoomId != null) {
             Games.RealTimeMultiplayer.leave(mGoogleApiClient, this, mRoomId);
             mRoomId = null;
+            Log.d(LOG_TAG, "switching to wait-screen from leaveRoom()");
             switchToScreen(R.id.wait_screen);
         } else {
+            Log.d(LOG_TAG, "switching to main-screen from leaveRoom()");
             switchToMainScreen();
         }
     }
@@ -440,6 +444,7 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
     public void onStop() {
         Log.d(LOG_TAG, "entered onStop");
 
+        // need not leave room for onStop, but only on game-end
         // if we're in a room, leave it.
         leaveRoom();
 
@@ -447,9 +452,11 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
         stopKeepingScreenOn();
 
         if (mGoogleApiClient == null || !mGoogleApiClient.isConnected()){
+            Log.d(LOG_TAG, "switching to sign-in-screen from leaveRoom()");
             switchToScreen(R.id.sign_in_screen);
         }
         else {
+            Log.d(LOG_TAG, "switching to wait-screen from onStop()");
             switchToScreen(R.id.wait_screen);
         }
         super.onStop();

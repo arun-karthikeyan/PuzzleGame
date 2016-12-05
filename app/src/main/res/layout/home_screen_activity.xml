@@ -6,14 +6,16 @@
     <!--Practice and sign-in Screen-->
     <LinearLayout android:orientation="vertical" android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center|center_vertical|center_horizontal"
+        android:gravity="center"
         android:id="@+id/sign_in_screen">
 
-        <Button android:id="@+id/practice_button"
+        <Button android:id="@+id/practice_button_1"
             style="@style/MainScreenButton"
             android:text="@string/practice"
             android:layout_gravity="center_horizontal"
             />
+        <TextView style="@style/MainScreenButtonBlurb"
+            android:text="@string/practice_explanation" />
 
         <!--<Button android:id="@+id/profile"
             android:layout_width="270dp"
@@ -23,6 +25,8 @@
             android:text="Profile Settings"/>-->
         <com.google.android.gms.common.SignInButton android:id="@+id/sign_in_button"
             style="@style/SignInButton" />
+        <TextView style="@style/MainScreenButtonBlurb"
+            android:text="@string/google_sign_in_explanation" />
 
     </LinearLayout>
 
@@ -30,6 +34,15 @@
     <LinearLayout android:orientation="vertical" android:layout_width="match_parent"
         android:layout_height="match_parent" android:id="@+id/signed_in_screen" android:gravity="center">
 
+        <!--Practice Options-->
+        <Button android:id="@+id/practice_button_2"
+            style="@style/MainScreenButton"
+            android:text="@string/practice"
+            android:layout_gravity="center_horizontal"
+            />
+
+        <TextView style="@style/MainScreenButtonBlurb"
+            android:text="@string/practice_explanation" />
 
         <!--Single-Player options-->
         <Button android:id="@+id/button_timed_challenge"
