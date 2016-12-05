@@ -16,6 +16,7 @@ import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 
 import com.google.android.gms.appindexing.Action;
@@ -25,10 +26,12 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.games.Games;
 import com.google.android.gms.games.multiplayer.Invitation;
+import com.google.android.gms.games.multiplayer.Multiplayer;
 import com.google.android.gms.games.multiplayer.OnInvitationReceivedListener;
 import com.google.android.gms.games.multiplayer.realtime.RealTimeMessage;
 import com.google.android.gms.games.multiplayer.realtime.RealTimeMessageReceivedListener;
 import com.google.android.gms.games.multiplayer.realtime.Room;
+import com.google.android.gms.games.multiplayer.realtime.RoomConfig;
 import com.google.android.gms.games.multiplayer.realtime.RoomStatusUpdateListener;
 import com.google.android.gms.games.multiplayer.realtime.RoomUpdateListener;
 import com.google.example.games.basegameutils.BaseGameUtils;
@@ -39,11 +42,14 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.io.File;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static com.raapgames.puzzlegame.Constants.LOG_TAG;
-import static com.raapgames.puzzlegame.R.id.sign_in_activity;
 
 public class HomeScreenActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
         View.OnClickListener, RealTimeMessageReceivedListener,
@@ -53,7 +59,7 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
     private static final int READ_EXTERNAL_STORAGE_ID = 2;
     private static final int CAMERA_ID = 3;
     private static final int INTERNET = 4;
-    private Button singlePlayerButton;
+//    private Button singlePlayerButton;
 //    private Button viewProfile;
     private SharedPreferences userPref;
     private ProgressDialog progressDialog;
@@ -74,6 +80,40 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
     // Request code used to invoke sign in user interactions.
     private static final int RC_SIGN_IN = 9001;
 
+    // This array lists all the individual screens our game has.
+    final static int[] SCREENS = {
+            R.id.sign_in_screen, R.id.signed_in_screen, R.id.wait_screen
+    };
+    int mCurScreen = -1;
+
+    // This array lists everything that's clickable, so we can install click
+    // event handlers.
+    final static int[] CLICKABLES = {
+            R.id.practice_button, R.id.sign_in_button, R.id.sign_out_button, R.id.button_invite_friends, R.id.button_quick_game,
+            R.id.button_timed_challenge, R.id.button_see_invitations
+    };
+
+    // how long until the game ends (seconds)
+    int mSecondsLeft = -1;
+
+    // game duration, seconds.
+    final static int GAME_DURATION = 300;
+
+    // Room ID where the currently active game is taking place; null if we're
+    // not playing.
+    String mRoomId = null;
+
+    //user's current score
+    int mScore = 0;
+    // Reset game variables in preparation for a new game.
+    // Score of other participants. We update this as we receive their scores
+    // from the network.
+    Map<String, Integer> mParticipantScore = new HashMap<String, Integer>();
+
+    // Participants who sent us their final score.
+    Set<String> mFinishedParticipants = new HashSet<String>();
+
+
     public String getUserId()
     {
         return UUID.randomUUID().toString();
@@ -83,6 +123,7 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
         userPref = getSharedPreferences(Constants.PREF_NAME,MODE_PRIVATE);
         Log.d(LOG_TAG,"Instance of SharedPreference obtained");
     }
+
     public boolean syncDetails(String user_id, String facebook_id, String facebook_name, String instId, String instName)
     {
         boolean result = false;
@@ -107,33 +148,107 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
 
     @Override
     public void onClick(View view) {
+        switch(view.getId()){
 
-    }
+            case R.id.sign_in_button:
+            Log.d(LOG_TAG, "Sign-in button has been clicked");
+                mSignInClicked = true;
+                mGoogleApiClient.connect();
+                break;
 
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        Log.d(LOG_TAG, "onConnected() called. Sign in successful!");
+            case R.id.practice_button:
+                //start picture select activity
+                Log.d(LOG_TAG, "Practice Button Clicked -> PictureSelectActivity starting..");
+                startActivity(new Intent(getBaseContext(), PictureSelectActivity.class));
+                break;
 
-        Log.d(LOG_TAG, "Sign-in succeeded.");
-        //switch screens to sign-in-activity
-        setContentView(R.layout.sign_in_activity);
-
-        //might have to move onclick for signout logic somewhere else
-
-        //set onclick listener for signout button
-        findViewById(R.id.sign_out_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //start the signout flow
-                Log.d(LOG_TAG, "Sign-out button clicked");
+            case R.id.sign_out_button:
+                Log.d(LOG_TAG, "Sign-out button has been clicked");
                 mSignInClicked = false;
                 Games.signOut(mGoogleApiClient);
                 mGoogleApiClient.disconnect();
-                //need to set view back to start screen
-                setContentView(R.layout.activity_home_screen); //might have to make sure logic works
-            }
-        });
+                switchToScreen(R.id.sign_in_screen);
+                break;
 
+            case R.id.button_invite_friends:
+                Log.d(LOG_TAG, "Invite friends button clicked");
+                break;
+
+            case R.id.button_quick_game:
+                Log.d(LOG_TAG, "Quick Game button clicked");
+                break;
+
+            case R.id.button_timed_challenge:
+                Log.d(LOG_TAG, "Timed Challenge button clicked");
+                break;
+
+            case R.id.button_see_invitations:
+                Log.d(LOG_TAG, "See Invitations button clicked");
+                break;
+
+        }
+    }
+
+    void switchToScreen(int screenId) {
+        //to switch between screens in home-screen-activity
+
+        for(int id: SCREENS){
+            findViewById(id).setVisibility(screenId==id?View.VISIBLE:View.GONE);
+        }
+        mCurScreen = screenId;
+    }
+
+    void switchToMainScreen() {
+        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+            switchToScreen(R.id.signed_in_screen);
+        }
+        else {
+            switchToScreen(R.id.sign_in_screen);
+        }
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle connectionHint) {
+        Log.d(LOG_TAG, "onConnected() called. Sign in successful!");
+
+        Log.d(LOG_TAG, "Sign-in succeeded.");
+        // register listener so we are notified if we receive an invitation to play
+        // while we are in the game
+        Games.Invitations.registerInvitationListener(mGoogleApiClient, this);
+
+        if (connectionHint != null) {
+            Log.d(LOG_TAG, "onConnected: connection hint provided. Checking for invite.");
+            Invitation inv = connectionHint
+                    .getParcelable(Multiplayer.EXTRA_INVITATION);
+            if (inv != null && inv.getInvitationId() != null) {
+                // retrieve and cache the invitation ID
+                Log.d(LOG_TAG,"onConnected: connection hint has a room invite!");
+                acceptInviteToRoom(inv.getInvitationId());
+                return;
+            }
+        }
+
+        switchToMainScreen();
+    }
+    // Accept the given invitation.
+    void acceptInviteToRoom(String invId) {
+        // accept the invitation
+        Log.d(LOG_TAG, "Accepting invitation: " + invId);
+        RoomConfig.Builder roomConfigBuilder = RoomConfig.builder(this);
+        roomConfigBuilder.setInvitationIdToAccept(invId)
+                .setMessageReceivedListener(this)
+                .setRoomStatusUpdateListener(this);
+        switchToScreen(R.id.wait_screen);
+        keepScreenOn();
+        resetGameVars();
+        Games.RealTimeMultiplayer.join(mGoogleApiClient, roomConfigBuilder.build());
+    }
+
+    void resetGameVars() {
+        mSecondsLeft = GAME_DURATION;
+        mScore = 0;
+        mParticipantScore.clear();
+        mFinishedParticipants.clear();
     }
 
     @Override
@@ -158,7 +273,7 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
                     connectionResult, RC_SIGN_IN, getString(R.string.signin_other_error));
         }
 
-//        switchToScreen(R.id.screen_sign_in);
+        switchToScreen(R.id.sign_in_screen);
     }
 
     @Override
@@ -257,7 +372,34 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
     }
 
     @Override
+    public void onActivityResult(int requestCode, int responseCode,
+                                 Intent intent){
+
+        super.onActivityResult(requestCode, responseCode, intent);
+
+        switch(requestCode){
+            case RC_SIGN_IN:
+                Log.d(LOG_TAG, "onActivityResult with requestCode == RC_SIGN_IN, responseCode="
+                        + responseCode + ", intent=" + intent);
+                mSignInClicked = false;
+                mResolvingConnectionFailure = false;
+                if (responseCode == RESULT_OK) {
+                    mGoogleApiClient.connect();
+                } else {
+                    BaseGameUtils.showActivityResultError(this,requestCode,responseCode, R.string.signin_other_error);
+                }
+                break;
+        }
+
+    }
+
+    @Override
     public void onStart() {
+        Log.d(LOG_TAG, "entered onStart");
+        super.onStart();
+
+        switchToScreen(R.id.wait_screen);
+
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
             Log.w(LOG_TAG,
                     "GameHelper: client was already connected on onStart()");
@@ -265,13 +407,52 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
             Log.d(LOG_TAG,"Connecting client.");
             mGoogleApiClient.connect();
         }
-        super.onStart();
+
     }
 
+    // Sets the flag to keep this screen on. It's recommended to do that during
+    // the
+    // handshake when setting up a game, because if the screen turns off, the
+    // game will be
+    // cancelled.
+    void keepScreenOn() {
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    // Clears the flag that keeps the screen on.
+    void stopKeepingScreenOn() {
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    void leaveRoom() {
+        Log.d(LOG_TAG, "Leaving room.");
+        mSecondsLeft = 0;
+        stopKeepingScreenOn();
+        if (mRoomId != null) {
+            Games.RealTimeMultiplayer.leave(mGoogleApiClient, this, mRoomId);
+            mRoomId = null;
+            switchToScreen(R.id.wait_screen);
+        } else {
+            switchToMainScreen();
+        }
+    }
     @Override
     public void onStop() {
+        Log.d(LOG_TAG, "entered onStop");
+
+        // if we're in a room, leave it.
+        leaveRoom();
+
+        // stop trying to keep the screen on
+        stopKeepingScreenOn();
+
+        if (mGoogleApiClient == null || !mGoogleApiClient.isConnected()){
+            switchToScreen(R.id.sign_in_screen);
+        }
+        else {
+            switchToScreen(R.id.wait_screen);
+        }
         super.onStop();
-        mGoogleApiClient.disconnect();
     }
 
     class InitTasks extends AsyncTask<Integer, Integer, Integer>
@@ -368,20 +549,25 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
     @Override
     @RequiresApi(api = Build.VERSION_CODES.M)
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d(LOG_TAG, "entered onCreate");
         super.onCreate(savedInstanceState);
         this.requestNecessaryPermissions();
-        setContentView(R.layout.activity_home_screen);
-        singlePlayerButton = (Button) findViewById(R.id.single_player);
+
+
+        setContentView(R.layout.home_screen_activity);
+
+
+//        singlePlayerButton = (Button) findViewById(R.id.single_player);
 //        viewProfile = (Button) findViewById(R.id.profile);
         pref_init();
         new InitTasks().execute(0);
-        singlePlayerButton.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View view) {
-                startActivity(new Intent(getBaseContext(), PictureSelectActivity.class));
-            }
-        });
+//        singlePlayerButton.setOnClickListener(new View.OnClickListener() {
+//
+//            @Override
+//            public void onClick(View view) {
+//                startActivity(new Intent(getBaseContext(), PictureSelectActivity.class));
+//            }
+//        });
 //        viewProfile.setOnClickListener(new View.OnClickListener(){
 //
 //            @Override
@@ -398,16 +584,21 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
                 .build();
 
         //set onclick listener for google signin button
-        findViewById(R.id.button_sign_in).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // start the sign-in flow
-                Log.d(LOG_TAG, "Sign-in button clicked");
-                mSignInClicked = true;
-                mGoogleApiClient.connect();
-            }
-        });
+//        findViewById(R.id.button_sign_in).setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                // start the sign-in flow
+//                Log.d(LOG_TAG, "Sign-in button clicked");
+//                mSignInClicked = true;
+//                mSignOutClicked = false;
+//                mGoogleApiClient.connect();
+//            }
+//        });
 
+        //set up all click listeners in one go
+        for(int id: CLICKABLES){
+            findViewById(id).setOnClickListener(this);
+        }
 
     }
     public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults)
