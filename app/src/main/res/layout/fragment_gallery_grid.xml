@@ -22,9 +22,8 @@
             android:id="@+id/take_picture"
             android:background="@drawable/oval"
             android:layout_alignParentBottom="true"
-            android:layout_alignParentRight="true"
+            android:layout_centerHorizontal="true"
             android:layout_marginBottom="15dp"
-            android:layout_marginRight="15dp"
             android:src="@drawable/camera_icon"/>
 
         <ImageButton
@@ -43,8 +42,9 @@
             android:id="@+id/instagram"
             android:background="@drawable/oval"
             android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true"
+            android:layout_alignParentRight="true"
             android:layout_marginBottom="15dp"
+            android:layout_marginRight="15dp"
             android:src="@drawable/instagram_icon"
             android:onClick="connectOrDisconnectUser"/>
     </RelativeLayout>
