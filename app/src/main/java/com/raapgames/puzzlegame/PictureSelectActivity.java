@@ -116,7 +116,7 @@ public class PictureSelectActivity extends AppCompatActivity
             @Override
             public void onSuccess() {
                 mApp.fetchUserName(handler);
-                switchToScreen(R.id.instagram_grid);
+                loadInstPic();
             }
 
             @Override
@@ -185,23 +185,53 @@ public class PictureSelectActivity extends AppCompatActivity
 
     public void connectOrDisconnectUser(View v) {
         if (mApp.hasAccessToken()) {
-            AllMediaFiles allMediaFiles = new AllMediaFiles(userInfoHashmap,instGridView);
-            imageThumbList = allMediaFiles.setContext(this);
-
-            switchToScreen(R.id.instagram_grid);
-            instGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-
-                    switchToScreen(R.id.pic);
-                    Holder holder = new Holder();
-                    holder.ivPhoto = imageView;
-                    imageLoader.DisplayImage(imageThumbList.get(position), holder.ivPhoto);
-                    imageRes = 3;
-                    imageView.setTag(imageThumbList.get(position));
-                }
-            });
+            loadInstPic();
         } else {
             mApp.authorize();
+        }
+    }
+
+    private void loadInstPic(){
+        AllMediaFiles allMediaFiles = new AllMediaFiles(userInfoHashmap,instGridView);
+        imageThumbList = allMediaFiles.setContext(this);
+
+        switchToScreen(R.id.instagram_grid);
+        instGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+
+                switchToScreen(R.id.pic);
+                Holder holder = new Holder();
+                holder.ivPhoto = imageView;
+                imageLoader.DisplayImage(imageThumbList.get(position), holder.ivPhoto);
+                imageRes = 3;
+                imageView.setTag(imageThumbList.get(position));
+            }
+        });
+    }
+
+    public void instagramLogout(View v){
+        if (mApp.hasAccessToken()) {
+            final AlertDialog.Builder builder = new AlertDialog.Builder(
+                    PictureSelectActivity.this);
+            builder.setMessage("Disconnect from Instagram?")
+                    .setCancelable(false)
+                    .setPositiveButton("Yes",
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog,
+                                                    int id) {
+                                    mApp.resetAccessToken();
+                                    switchToScreen(R.id.image_grid);
+                                }
+                            })
+                    .setNegativeButton("No",
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog,
+                                                    int id) {
+                                    dialog.cancel();
+                                }
+                            });
+            final AlertDialog alert = builder.create();
+            alert.show();
         }
     }
 

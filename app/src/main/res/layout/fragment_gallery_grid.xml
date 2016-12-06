@@ -63,6 +63,16 @@
 
         </GridView>
 
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/inst_logout"
+            android:src="@drawable/info_icon"
+            android:background="@android:color/transparent"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentBottom="true"
+            android:onClick="instagramLogout"/>
+
     </RelativeLayout>
     <RelativeLayout
         android:layout_width="match_parent"

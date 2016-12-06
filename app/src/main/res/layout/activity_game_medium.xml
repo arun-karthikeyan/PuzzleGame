@@ -8,6 +8,12 @@
     tools:context="com.raapgames.puzzlegame.Game_medium"
     android:gravity="center">
 
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="invisible"
+        android:id="@+id/tempImage2"/>
+
     <RelativeLayout
         android:orientation="vertical"
         android:layout_height="wrap_content"
