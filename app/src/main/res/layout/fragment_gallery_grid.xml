@@ -37,6 +37,32 @@
             android:layout_marginBottom="15dp"
             android:layout_marginLeft="15dp"
             android:src="@drawable/gallery_icon"/>
+        <ImageButton
+            android:layout_width="65dp"
+            android:layout_height="65dp"
+            android:id="@+id/instagram"
+            android:background="@drawable/oval"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="15dp"
+            android:src="@drawable/instagram_icon"
+            android:onClick="connectOrDisconnectUser"/>
+    </RelativeLayout>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/instagram_grid">
+
+        <GridView
+            android:id="@+id/inst_grid"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:numColumns="2"
+            android:verticalSpacing="8dp"
+            android:horizontalSpacing="8dp">
+
+        </GridView>
+
     </RelativeLayout>
     <RelativeLayout
         android:layout_width="match_parent"

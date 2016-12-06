@@ -5,18 +5,23 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.example.games.basegameutils.ImageLoader;
+
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 
 import static com.raapgames.puzzlegame.Constants.LOG_TAG;
@@ -31,15 +36,32 @@ public class Game_small extends AppCompatActivity {
     private Bitmap puzzleImage;
     private final int gridWidth = 3;
     private final int gridHeight = 3;
+    private ImageView imageView;
+    private ImageLoader imageLoader;
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_game_small);
+
+        this.imageView = (ImageView) findViewById(R.id.tempImage);
+        this.imageLoader = new ImageLoader(this.getApplicationContext());
+
         try {
-            this.puzzleImage = getByteArray();
+            String from = this.getIntent().getStringExtra("from");
+            String resource = this.getIntent().getStringExtra("resource");
+            if(from.equalsIgnoreCase("inst")){
+                new DownloadImageTask(imageView)
+                        .execute(resource);
+            }else {
+                this.puzzleImage = getByteArray();
+                initialize();
+            }
         }catch (Exception e){
             e.printStackTrace();
         }
-        setContentView(R.layout.activity_game_small);
+    }
+
+    private void initialize(){
         buttons = findButtons();
 
         for(int i=0;i<9;i++){
@@ -69,6 +91,9 @@ public class Game_small extends AppCompatActivity {
 
         if(from.equalsIgnoreCase("grid")){
             bitmap = BitmapFactory.decodeResource(getResources(),Integer.parseInt(resource));
+        }
+        else if(from.equalsIgnoreCase("inst")){
+            bitmap = ((BitmapDrawable)imageView.getDrawable()).getBitmap();
         }
         else{
             inputStream = getContentResolver().openInputStream(Uri.parse(resource));
@@ -288,5 +313,36 @@ public class Game_small extends AppCompatActivity {
             }
         }
         return i;
+    }
+
+    private class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
+        ImageView bmImage;
+
+        public DownloadImageTask(ImageView bmImage) {
+            this.bmImage = bmImage;
+        }
+
+        protected Bitmap doInBackground(String... urls) {
+            String urldisplay = urls[0];
+            Bitmap mIcon11 = null;
+            try {
+                InputStream in = new URL(urldisplay).openStream();
+                mIcon11 = BitmapFactory.decodeStream(in);
+            } catch (Exception e) {
+                Log.e("Error", e.getMessage());
+                e.printStackTrace();
+            }
+            return mIcon11;
+        }
+
+        protected void onPostExecute(Bitmap result) {
+            bmImage.setImageBitmap(result);
+            try {
+                puzzleImage = getByteArray();
+                initialize();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

@@ -1,12 +1,16 @@
 package com.raapgames.puzzlegame;
 
 import android.annotation.TargetApi;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -23,11 +27,15 @@ import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.google.example.games.basegameutils.ImageLoader;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import static com.raapgames.puzzlegame.Constants.LOG_TAG;
 
@@ -37,20 +45,39 @@ import static com.raapgames.puzzlegame.Constants.LOG_TAG;
 
 public class PictureSelectActivity extends AppCompatActivity
 {
-    private GridView gridview;
+    private InstagramApp mApp;
+    private GridView gridview,instGridView;
     private ImageButton take_pic;
     private ImageButton gal_pic;
+    private ImageButton instagram;
     private Button next_page;
     private Button reselect;
     private ImageView imageView;
     private RadioGroup radioGroup;
     private RadioButton radioButton;
+    private ArrayList<String> imageThumbList = new ArrayList<String>();
     private Uri imageUri;
+    private ImageLoader imageLoader;
     private final int PIC_CAPTURE_ID = 0;
     private int imageRes = 0;
     final static int[] SCREENS = {
-            R.id.image_grid,R.id.pic
+            R.id.image_grid,R.id.pic,R.id.instagram_grid
     };
+    private HashMap<String, String> userInfoHashmap = new HashMap<String, String>();
+
+    private Handler handler = new Handler(new Handler.Callback() {
+
+        @Override
+        public boolean handleMessage(Message msg) {
+            if (msg.what == InstagramApp.WHAT_FINALIZE) {
+                userInfoHashmap = mApp.getUserInfo();
+            } else if (msg.what == InstagramApp.WHAT_FINALIZE) {
+                Toast.makeText(PictureSelectActivity.this, "Check your network.",
+                        Toast.LENGTH_SHORT).show();
+            }
+            return false;
+        }
+    });
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -61,8 +88,10 @@ public class PictureSelectActivity extends AppCompatActivity
 
         take_pic = (ImageButton) findViewById(R.id.take_picture);
         gal_pic = (ImageButton) findViewById(R.id.choose_gallery);
+        instagram = (ImageButton) findViewById(R.id.instagram);
         imageView =(ImageView) findViewById(R.id.imageDisplay);
         int width = getApplicationContext().getResources().getDisplayMetrics().widthPixels-100;
+        imageLoader = new ImageLoader(this);
         RelativeLayout.LayoutParams rp = new RelativeLayout.LayoutParams(width,width);
         rp.topMargin = 50;
         rp.leftMargin = 50;
@@ -75,6 +104,36 @@ public class PictureSelectActivity extends AppCompatActivity
         radioGroup = (RadioGroup) findViewById(R.id.level_select);
         //radioGroup.setVisibility(View.INVISIBLE);
         switchToScreen(R.id.image_grid);
+
+        /*
+        *Instagram Integration Start
+        *  Check for login
+         */
+        mApp = new InstagramApp(this, ApplicationData.CLIENT_ID,
+                ApplicationData.CLIENT_SECRET, ApplicationData.CALLBACK_URL);
+        mApp.setListener(new InstagramApp.OAuthAuthenticationListener() {
+
+            @Override
+            public void onSuccess() {
+                mApp.fetchUserName(handler);
+                switchToScreen(R.id.instagram_grid);
+            }
+
+            @Override
+            public void onFail(String error) {
+                Toast.makeText(PictureSelectActivity.this, error, Toast.LENGTH_SHORT)
+                        .show();
+            }
+        });
+        if (mApp.hasAccessToken()) {
+            mApp.fetchUserName(handler);
+        }
+
+        instGridView = (GridView) findViewById(R.id.inst_grid);
+
+        /*
+        * Instagram Integration End
+        */
 
         gridview = (GridView) findViewById(R.id.grid);
         final ImageAdapter imageAdapter = new ImageAdapter(this);
@@ -121,6 +180,29 @@ public class PictureSelectActivity extends AppCompatActivity
                 startActivityForResult(pickPhoto, 1);
             }
         });
+    }
+
+
+    public void connectOrDisconnectUser(View v) {
+        if (mApp.hasAccessToken()) {
+            AllMediaFiles allMediaFiles = new AllMediaFiles(userInfoHashmap,instGridView);
+            imageThumbList = allMediaFiles.setContext(this);
+
+            switchToScreen(R.id.instagram_grid);
+            instGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+
+                    switchToScreen(R.id.pic);
+                    Holder holder = new Holder();
+                    holder.ivPhoto = imageView;
+                    imageLoader.DisplayImage(imageThumbList.get(position), holder.ivPhoto);
+                    imageRes = 3;
+                    imageView.setTag(imageThumbList.get(position));
+                }
+            });
+        } else {
+            mApp.authorize();
+        }
     }
 
     @Override
@@ -184,7 +266,7 @@ public class PictureSelectActivity extends AppCompatActivity
             intent = new Intent(getBaseContext(), Game_medium.class);
         }
 
-        intent.putExtra("from",imageRes==0?"grid":imageRes==1?"camera":"gallery");
+        intent.putExtra("from",imageRes==0?"grid":imageRes==1?"camera":imageRes==2?"gallery":"inst");
         intent.putExtra("resource",imageView.getTag().toString());
         startActivity(intent);
     }
@@ -199,5 +281,9 @@ public class PictureSelectActivity extends AppCompatActivity
         for(int id: SCREENS){
             findViewById(id).setVisibility(screenId==id?View.VISIBLE:View.GONE);
         }
+    }
+
+    private class Holder {
+        private ImageView ivPhoto;
     }
 }
