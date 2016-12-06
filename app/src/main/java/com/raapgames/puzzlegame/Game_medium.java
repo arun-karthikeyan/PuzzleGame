@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -14,9 +15,14 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 
+import static com.raapgames.puzzlegame.Constants.LOG_TAG;
+
 public class Game_medium extends AppCompatActivity {
+
     private Button[] buttons;
     private TextView moveCounter;
     private Boolean bad_move=false;
@@ -27,9 +33,11 @@ public class Game_medium extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        byte[] byteArray = this.getIntent().getByteArrayExtra("image");
-        this.puzzleImage = BitmapFactory.decodeByteArray(byteArray,0,byteArray.length);
-        Log.d(Constants.LOG_TAG, this.puzzleImage.getHeight()+" "+this.puzzleImage.getWidth());
+        try {
+            this.puzzleImage = getByteArray();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         setContentView(R.layout.activity_game_medium);
         buttons = findButtons();
 
@@ -51,6 +59,31 @@ public class Game_medium extends AppCompatActivity {
             });
         }
     }
+
+    private Bitmap getByteArray() throws Exception{
+        Bitmap bitmap = null;
+        InputStream inputStream = null;
+        String from = this.getIntent().getStringExtra("from");
+        String resource = this.getIntent().getStringExtra("resource");
+        int level = 3;
+
+        if(from.equalsIgnoreCase("grid")){
+            bitmap = BitmapFactory.decodeResource(getResources(),Integer.parseInt(resource));
+        }
+        else{
+            inputStream = getContentResolver().openInputStream(Uri.parse(resource));
+            bitmap = BitmapFactory.decodeStream(inputStream);
+        }
+
+        int newHeight = (bitmap.getHeight()%level)==0?bitmap.getHeight():((bitmap.getHeight()/level)*level);
+        int newWidth = (bitmap.getWidth()%level)==0?bitmap.getWidth():((bitmap.getWidth()/level)*level);
+        Bitmap croppedBitmap = Bitmap.createBitmap(bitmap,0,0,newWidth,newHeight);
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        croppedBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        Log.d(LOG_TAG,"OldHeight: "+bitmap.getHeight()+", OldWidth: "+bitmap.getWidth()+" ; NewHeight: "+croppedBitmap.getHeight()+", NewWidth: "+croppedBitmap.getWidth());
+        return croppedBitmap;
+    }
+
     private void customShuffle(){
 //        0 2 15 3 4 1 5 7 12 8 6 10 13 14 9 11
         ArrayList<Integer> tempCells = new ArrayList<Integer>();

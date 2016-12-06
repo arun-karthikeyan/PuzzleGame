@@ -43,10 +43,11 @@
         android:layout_height="match_parent"
         android:id="@+id/pic">
         <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="800dp"
+            android:layout_height="800dp"
             android:layout_margin="50dp"
-            android:id="@+id/imageDisplay"/>
+            android:id="@+id/imageDisplay"
+            android:src="@drawable/batman"/>
 
         <RadioGroup
             android:layout_width="match_parent"
@@ -56,7 +57,8 @@
             android:orientation="horizontal"
             android:gravity="center_horizontal"
             android:layout_marginTop="10dp"
-            android:layout_marginBottom="10dp">
+            android:layout_marginBottom="10dp"
+            android:checkedButton="@+id/game_small">
             <RadioButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -70,13 +72,12 @@
         </RadioGroup>
 
         <Button android:id="@+id/next_page"
-            android:layout_margin="@dimen/activity_vertical_margin"
             android:layout_width="270dp"
             android:layout_height="wrap_content"
             android:text="Play"
             android:onClick="onPlay"
             android:layout_below="@+id/level_select"
-            android:gravity="center_horizontal"/>
+            android:layout_centerHorizontal="true"/>
 
         <Button android:id="@+id/another_pic"
             android:layout_margin="@dimen/activity_vertical_margin"
@@ -85,6 +86,6 @@
             android:text="Re-select Picture"
             android:onClick="onReselect"
             android:layout_below="@+id/next_page"
-            android:gravity="center_horizontal"/>
+            android:layout_centerHorizontal="true"/>
     </RelativeLayout>
 </FrameLayout>

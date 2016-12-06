@@ -47,6 +47,7 @@ public class PictureSelectActivity extends AppCompatActivity
     private RadioButton radioButton;
     private Uri imageUri;
     private final int PIC_CAPTURE_ID = 0;
+    private int imageRes = 0;
     final static int[] SCREENS = {
             R.id.image_grid,R.id.pic
     };
@@ -61,6 +62,11 @@ public class PictureSelectActivity extends AppCompatActivity
         take_pic = (ImageButton) findViewById(R.id.take_picture);
         gal_pic = (ImageButton) findViewById(R.id.choose_gallery);
         imageView =(ImageView) findViewById(R.id.imageDisplay);
+        int width = getApplicationContext().getResources().getDisplayMetrics().widthPixels-100;
+        RelativeLayout.LayoutParams rp = new RelativeLayout.LayoutParams(width,width);
+        rp.topMargin = 50;
+        rp.leftMargin = 50;
+        imageView.setLayoutParams(rp);
         //imageView.setVisibility(View.INVISIBLE);
         next_page = (Button) findViewById(R.id.next_page);
         //next_page.setVisibility(View.INVISIBLE);
@@ -77,13 +83,10 @@ public class PictureSelectActivity extends AppCompatActivity
         gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                 switchToScreen(R.id.pic);
-
-                int width = getApplicationContext().getResources().getDisplayMetrics().widthPixels-100;
-                RelativeLayout.LayoutParams rp = new RelativeLayout.LayoutParams(width,width);
-                rp.topMargin = 50;
-                rp.leftMargin = 50;
-                imageView.setLayoutParams(rp);
-                imageView.setImageBitmap(BitmapFactory.decodeResource(getResources(),(imageAdapter.getmThumbIds())[position]));
+                Bitmap bitmap = BitmapFactory.decodeResource(getResources(),(imageAdapter.getmThumbIds())[position]);
+                imageView.setImageBitmap(bitmap);
+                imageRes = 0;
+                imageView.setTag((imageAdapter.getmThumbIds())[position]);
             }
         });
 
@@ -138,20 +141,20 @@ public class PictureSelectActivity extends AppCompatActivity
                 {
                     case 0:
                     {
-                        Log.d(LOG_TAG,"Inside Picture Captured");
+                        Log.d(LOG_TAG,"Inside Picture Captured::" + imageUri);
                         inputStream = getContentResolver().openInputStream(imageUri);
                         imageView.setImageBitmap(BitmapFactory.decodeStream(inputStream));
+                        imageRes = 1;
+                        imageView.setTag(imageUri);
                         break;
                     }
                     case 1:
                     {
-                        Log.d(LOG_TAG,"Inside Picture Selected");
+                        Log.d(LOG_TAG,"Inside Picture Selected::"+data.getData());
                         inputStream = getContentResolver().openInputStream(data.getData());
                         imageView.setImageBitmap(BitmapFactory.decodeStream(inputStream));
-                        /*
-                            Image split logic
-                         */
-
+                        imageRes = 2;
+                        imageView.setTag(data.getData());
                         break;
                     }
                 }
@@ -169,39 +172,21 @@ public class PictureSelectActivity extends AppCompatActivity
     public void onPlay(View view){
         int selected_id = radioGroup.getCheckedRadioButtonId();
         radioButton = (RadioButton) findViewById(selected_id);
+        Intent intent = null;
 
         String[] glevel = radioButton.getText().toString().trim().split("\\s+");
         int level = Integer.parseInt(glevel[0]);
 
         if(level==3){
-            Intent intent = new Intent(getBaseContext(), Game_small.class);
-            Bitmap bitmap = ((BitmapDrawable)imageView.getDrawable()).getBitmap();
-//            Log.d(LOG_TAG, String.valueOf(bitmap.getAllocationByteCount()));
-            int newHeight = (bitmap.getHeight()%level)==0?bitmap.getHeight():((bitmap.getHeight()/level)*level);
-            int newWidth = (bitmap.getWidth()%level)==0?bitmap.getWidth():((bitmap.getWidth()/level)*level);
-            Bitmap croppedBitmap = Bitmap.createBitmap(bitmap,0,0,newWidth,newHeight);
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            croppedBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-            Log.d(LOG_TAG,"OldHeight: "+bitmap.getHeight()+", OldWidth: "+bitmap.getWidth()+" ; NewHeight: "+croppedBitmap.getHeight()+", NewWidth: "+croppedBitmap.getWidth());
-            byte[] byteArray = stream.toByteArray();
-            Log.d(LOG_TAG,"Image byte array Length : "+byteArray.length);
-            intent.putExtra("image",byteArray);
-            startActivity(intent);
+            intent = new Intent(getBaseContext(), Game_small.class);
         }
         if(level==4){
-            Intent intent = new Intent(getBaseContext(), Game_medium.class);
-            Bitmap bitmap = ((BitmapDrawable)imageView.getDrawable()).getBitmap();
-            int newHeight = (bitmap.getHeight()%level)==0?bitmap.getHeight():((bitmap.getHeight()/level)*level);
-            int newWidth = (bitmap.getWidth()%level)==0?bitmap.getWidth():((bitmap.getWidth()/level)*level);
-            Bitmap croppedBitmap = Bitmap.createBitmap(bitmap,0,0,newWidth,newHeight);
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            croppedBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-            Log.d(LOG_TAG,"OldHeight: "+bitmap.getHeight()+", OldWidth: "+bitmap.getWidth()+" ; NewHeight: "+croppedBitmap.getHeight()+", NewWidth: "+croppedBitmap.getWidth());
-            byte[] byteArray = stream.toByteArray();
-            Log.d(LOG_TAG,"Image byte array Length : "+byteArray.length);
-            intent.putExtra("image",byteArray);
-            startActivity(intent);
+            intent = new Intent(getBaseContext(), Game_medium.class);
         }
+
+        intent.putExtra("from",imageRes==0?"grid":imageRes==1?"camera":"gallery");
+        intent.putExtra("resource",imageView.getTag().toString());
+        startActivity(intent);
     }
 
     public void onReselect(View view){
