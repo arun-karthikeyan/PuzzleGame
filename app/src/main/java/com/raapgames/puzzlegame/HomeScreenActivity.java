@@ -202,8 +202,8 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
                 break;
 
             case R.id.button_quick_game:
-                startQuickGame();
                 Log.d(LOG_TAG, "Quick Game button clicked");
+                startQuickGame();
                 break;
 
             case R.id.button_timed_challenge:
