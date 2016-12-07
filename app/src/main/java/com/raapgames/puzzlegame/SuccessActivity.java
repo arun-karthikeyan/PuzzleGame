@@ -11,7 +11,9 @@ import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookSdk;
 import com.facebook.LoggingBehavior;
+import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginManager;
+import com.facebook.share.ShareApi;
 import com.facebook.share.model.ShareOpenGraphAction;
 import com.facebook.share.model.ShareOpenGraphContent;
 import com.facebook.share.model.ShareOpenGraphObject;
@@ -34,9 +36,6 @@ public class SuccessActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        FacebookSdk.sdkInitialize(getApplicationContext());
-        FacebookSdk.setIsDebugEnabled(true);
-        FacebookSdk.addLoggingBehavior(LoggingBehavior.INCLUDE_ACCESS_TOKENS);
         FacebookSdk.sdkInitialize(getApplicationContext(), new FacebookSdk.InitializeCallback(){
             @Override
             public void onInitialized()
@@ -44,41 +43,48 @@ public class SuccessActivity extends AppCompatActivity
                 if(AccessToken.getCurrentAccessToken() != null)
                 {
                     Log.d("AccessTokenPresent","here");
+                    Log.d("UserID:",AccessToken.getCurrentAccessToken().getUserId());
                 }
                 else
                 {
                     Log.d("initializing","login");
-                    List<String> permissions = Arrays.asList("publish_actions");
-                    LoginManager.getInstance().logInWithPublishPermissions(SuccessActivity.this, permissions);
+                    LoginManager.getInstance().logInWithPublishPermissions(SuccessActivity.this, Arrays.asList("publish_actions"));
+
+                }
+                for (String temp: AccessToken.getCurrentAccessToken().getPermissions())
+                {
+                    Log.d("permission",temp);
                 }
             }
         });
-        callbackManager= CallbackManager.Factory.create();
+        FacebookSdk.setIsDebugEnabled(true);
+        FacebookSdk.addLoggingBehavior(LoggingBehavior.INCLUDE_ACCESS_TOKENS);
         setContentView(R.layout.success_layout);
+        AppEventsLogger.activateApp(getApplication());
+        callbackManager= CallbackManager.Factory.create();
         shareButton = (ShareButton) findViewById(R.id.shareButton);
-        SharePhoto photo = new SharePhoto.Builder().setBitmap(BitmapFactory.decodeResource(getResources(),R.mipmap.ic_launcher)).build();
-        ShareOpenGraphObject object = new ShareOpenGraphObject.Builder().putString("og:title","Beat this score!").putString("og:type","games.game")
-                .putString("og:description","Play this puzzle and beat this score!").putPhoto("image",photo).build();
+
+        SharePhoto photo = new SharePhoto.Builder().setBitmap(BitmapFactory.decodeResource(getResources(),R.drawable.feature_graphic)).build();
+        ShareOpenGraphObject object = new ShareOpenGraphObject.Builder().putString("og:title","Congrats!!").putString("og:type","game.achievement").putString("fb:app_id",getResources().getString(R.string.facebook_app_id))
+                .putString("og:description","Play this puzzle and beat this score!").putInt("game:points",1000).putPhoto("og:image",photo).build();
         ShareOpenGraphAction action = new ShareOpenGraphAction.Builder()
-                .setActionType("games.game")
+                .setActionType("games.celebrate")
                 .putObject("game", object)
                 .build();
-        final ShareOpenGraphContent content = new ShareOpenGraphContent.Builder()
+        ShareOpenGraphContent content = new ShareOpenGraphContent.Builder()
                 .setPreviewPropertyName("game")
                 .setAction(action)
                 .build();
 
+        ShareApi.share(content,null);
         shareButton.setShareContent(content);
-        shareButton.setOnClickListener(new View.OnClickListener(){
+        /*shareButton.setOnClickListener(new View.OnClickListener(){
 
             @Override
             public void onClick(View view) {
                 Log.d("Before click","here");
-                ShareDialog.show(SuccessActivity.this,content);
-
             }
-        });
-        ShareDialog.show(SuccessActivity.this,content);
+        });*/
     }
     @Override
     protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
