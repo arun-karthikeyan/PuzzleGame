@@ -18,6 +18,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
@@ -28,6 +29,7 @@ import com.google.android.gms.games.Games;
 import com.google.android.gms.games.multiplayer.Invitation;
 import com.google.android.gms.games.multiplayer.Multiplayer;
 import com.google.android.gms.games.multiplayer.OnInvitationReceivedListener;
+import com.google.android.gms.games.multiplayer.Participant;
 import com.google.android.gms.games.multiplayer.realtime.RealTimeMessage;
 import com.google.android.gms.games.multiplayer.realtime.RealTimeMessageReceivedListener;
 import com.google.android.gms.games.multiplayer.realtime.Room;
@@ -42,6 +44,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.io.File;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -108,11 +111,25 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
     // Reset game variables in preparation for a new game.
     // Score of other participants. We update this as we receive their scores
     // from the network.
-    Map<String, Integer> mParticipantScore = new HashMap<String, Integer>();
+    Map<String, int[]> mParticipantScore = new HashMap<String, int[]>();
 
     // Participants who sent us their final score.
     Set<String> mFinishedParticipants = new HashSet<String>();
 
+    // The participants in the currently active game
+    ArrayList<Participant> mParticipants = null;
+
+    String mMyId = null;
+
+    // If non-null, this is the id of the invitation we received via the
+    // invitation listener
+    String mIncomingInvitationId = null;
+
+    // Message buffer for sending messages
+    byte[] mMsgBuf = new byte[2];
+
+    // Are we playing in multiplayer mode?
+    boolean mMultiplayer = false;
 
     public String getUserId()
     {
@@ -176,6 +193,7 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
                 break;
 
             case R.id.button_quick_game:
+                startQuickGame();
                 Log.d(LOG_TAG, "Quick Game button clicked");
                 break;
 
@@ -188,6 +206,21 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
                 break;
 
         }
+    }
+
+    void startQuickGame() {
+        // quick-start a game with 1 randomly selected opponent
+        final int MIN_OPPONENTS = 1, MAX_OPPONENTS = 1;
+        Bundle autoMatchCriteria = RoomConfig.createAutoMatchCriteria(MIN_OPPONENTS,
+                MAX_OPPONENTS, 0);
+        RoomConfig.Builder rtmConfigBuilder = RoomConfig.builder(this);
+        rtmConfigBuilder.setMessageReceivedListener(this);
+        rtmConfigBuilder.setRoomStatusUpdateListener(this);
+        rtmConfigBuilder.setAutoMatchCriteria(autoMatchCriteria);
+        switchToScreen(R.id.wait_screen);
+        keepScreenOn();
+        resetGameVars();
+        Games.RealTimeMultiplayer.create(mGoogleApiClient, rtmConfigBuilder.build());
     }
 
     void switchToScreen(int screenId) {
@@ -287,59 +320,163 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
 
     }
 
+
     @Override
     public void onRealTimeMessageReceived(RealTimeMessage realTimeMessage) {
+//        byte[] buf = rtm.getMessageData();
+//        String sender = rtm.getSenderParticipantId();
+//        Log.d(TAG, "Message received: " + (char) buf[0] + "/" + (int) buf[1]);
+//
+//        if (buf[0] == 'F' || buf[0] == 'U') {
+//            // score update.
+//            int existingScore = mParticipantScore.containsKey(sender) ?
+//                    mParticipantScore.get(sender) : 0;
+//            int thisScore = (int) buf[1];
+//            if (thisScore > existingScore) {
+//                // this check is necessary because packets may arrive out of
+//                // order, so we
+//                // should only ever consider the highest score we received, as
+//                // we know in our
+//                // game there is no way to lose points. If there was a way to
+//                // lose points,
+//                // we'd have to add a "serial number" to the packet.
+//                mParticipantScore.put(sender, thisScore);
+//            }
+//
+//            // update the scores on the screen
+//            updatePeerScoresDisplay();
+//
+//            // if it's a final score, mark this participant as having finished
+//            // the game
+//            if ((char) buf[0] == 'F') {
+//                mFinishedParticipants.add(rtm.getSenderParticipantId());
+//            }
+//        }
 
+        byte[] buf = realTimeMessage.getMessageData();
+        String sender = realTimeMessage.getSenderParticipantId();
+        Log.d(LOG_TAG,"Message received : "+(char)buf[0] +"; "+(int)buf[1]+"; "+(int)buf[2]);
+
+//        if(buf[0]=='F'){
+            //notify all users only if one of them completes the game
+            int moves = (int)buf[1];
+            int time = (int)buf[2];
+            mParticipantScore.put(sender, new int[]{moves, time});
+            //add finished participant in mFinishedParticipants
+            mFinishedParticipants.add(realTimeMessage.getSenderParticipantId());
+            //update status on the display screen
+//            updatePeerScoresDisplay();
+//        }
+
+
+
+    }
+    // updates the screen with the scores from our peers
+//    void updatePeerScoresDisplay() {
+//        ((TextView) findViewById(R.id.score0)).setText(formatScore(mScore) + " - Me");
+//        int[] arr = {
+//                R.id.score1, R.id.score2, R.id.score3
+//        };
+//        int i = 0;
+//
+//        if (mRoomId != null) {
+//            for (Participant p : mParticipants) {
+//                String pid = p.getParticipantId();
+//                if (pid.equals(mMyId))
+//                    continue;
+//                if (p.getStatus() != Participant.STATUS_JOINED)
+//                    continue;
+//                int score = mParticipantScore.containsKey(pid) ? mParticipantScore.get(pid) : 0;
+//                ((TextView) findViewById(arr[i])).setText(formatScore(score) + " - " +
+//                        p.getDisplayName());
+//                ++i;
+//            }
+//        }
+//
+//        for (; i < arr.length; ++i) {
+//            ((TextView) findViewById(arr[i])).setText("");
+//        }
+//    }
+
+    void updateRoom(Room room) {
+        if (room != null) {
+            mParticipants = room.getParticipants();
+        }
+        if (mParticipants != null) {
+//            updatePeerScoresDisplay();
+        }
     }
 
     @Override
     public void onRoomConnecting(Room room) {
-
+        updateRoom(room);
     }
 
     @Override
     public void onRoomAutoMatching(Room room) {
-
+        updateRoom(room);
     }
 
     @Override
     public void onPeerInvitedToRoom(Room room, List<String> list) {
-
+        updateRoom(room);
     }
 
     @Override
     public void onPeerDeclined(Room room, List<String> list) {
-
+        updateRoom(room);
     }
 
     @Override
     public void onPeerJoined(Room room, List<String> list) {
-
+        updateRoom(room);
     }
 
     @Override
     public void onPeerLeft(Room room, List<String> list) {
-
+        updateRoom(room);
     }
 
+    // Called when we are connected to the room. We're not ready to play yet! (maybe not everybody
+    // is connected yet).
     @Override
     public void onConnectedToRoom(Room room) {
+        Log.d(LOG_TAG, "onConnectedToRoom.");
 
+        //get participants and my ID:
+        mParticipants = room.getParticipants();
+        mMyId = room.getParticipantId(Games.Players.getCurrentPlayerId(mGoogleApiClient));
+
+        // save room ID if its not initialized in onRoomCreated() so we can leave cleanly before the game starts.
+        if(mRoomId==null)
+            mRoomId = room.getRoomId();
+
+        // print out the list of participants (for debug purposes)
+        Log.d(LOG_TAG, "Room ID: " + mRoomId);
+        Log.d(LOG_TAG, "My ID " + mMyId);
+        Log.d(LOG_TAG, "<< CONNECTED TO ROOM>>");
     }
 
     @Override
     public void onDisconnectedFromRoom(Room room) {
+        mRoomId = null;
+        showGameError();
+    }
 
+    // Show error message about game being cancelled and return to main screen.
+    void showGameError() {
+        BaseGameUtils.makeSimpleDialog(this, getString(R.string.game_problem));
+        switchToMainScreen();
     }
 
     @Override
     public void onPeersConnected(Room room, List<String> list) {
-
+        updateRoom(room);
     }
 
     @Override
     public void onPeersDisconnected(Room room, List<String> list) {
-
+        updateRoom(room);
     }
 
     @Override
