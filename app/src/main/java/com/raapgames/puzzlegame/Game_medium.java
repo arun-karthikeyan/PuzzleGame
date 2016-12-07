@@ -4,19 +4,28 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 
+import static com.raapgames.puzzlegame.Constants.LOG_TAG;
+
 public class Game_medium extends AppCompatActivity {
+
     private Button[] buttons;
     private TextView moveCounter;
     private Boolean bad_move=false;
@@ -24,13 +33,30 @@ public class Game_medium extends AppCompatActivity {
     private ArrayList<Integer> cells = new ArrayList<Integer>();
     private Bitmap puzzleImage;
     private static final int gridHeight = 4, gridWidth = 4;
+    private ImageView imageView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        byte[] byteArray = this.getIntent().getByteArrayExtra("image");
-        this.puzzleImage = BitmapFactory.decodeByteArray(byteArray,0,byteArray.length);
-        Log.d(Constants.LOG_TAG, this.puzzleImage.getHeight()+" "+this.puzzleImage.getWidth());
         setContentView(R.layout.activity_game_medium);
+
+        this.imageView = (ImageView) findViewById(R.id.tempImage2);
+
+        try {
+            String from = this.getIntent().getStringExtra("from");
+            String resource = this.getIntent().getStringExtra("resource");
+            if(from.equalsIgnoreCase("inst")){
+                new DownloadImageTask(imageView)
+                        .execute(resource);
+            }else {
+                this.puzzleImage = getByteArray();
+                initialize();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private void initialize(){
         buttons = findButtons();
 
         for(int i=0;i<16;i++)
@@ -51,6 +77,34 @@ public class Game_medium extends AppCompatActivity {
             });
         }
     }
+
+    private Bitmap getByteArray() throws Exception{
+        Bitmap bitmap = null;
+        InputStream inputStream = null;
+        String from = this.getIntent().getStringExtra("from");
+        String resource = this.getIntent().getStringExtra("resource");
+        int level = 3;
+
+        if(from.equalsIgnoreCase("grid")){
+            bitmap = BitmapFactory.decodeResource(getResources(),Integer.parseInt(resource));
+        }
+        else if(from.equalsIgnoreCase("inst")){
+            bitmap = ((BitmapDrawable)imageView.getDrawable()).getBitmap();
+        }
+        else{
+            inputStream = getContentResolver().openInputStream(Uri.parse(resource));
+            bitmap = BitmapFactory.decodeStream(inputStream);
+        }
+
+        int newHeight = (bitmap.getHeight()%level)==0?bitmap.getHeight():((bitmap.getHeight()/level)*level);
+        int newWidth = (bitmap.getWidth()%level)==0?bitmap.getWidth():((bitmap.getWidth()/level)*level);
+        Bitmap croppedBitmap = Bitmap.createBitmap(bitmap,0,0,newWidth,newHeight);
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        croppedBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        Log.d(LOG_TAG,"OldHeight: "+bitmap.getHeight()+", OldWidth: "+bitmap.getWidth()+" ; NewHeight: "+croppedBitmap.getHeight()+", NewWidth: "+croppedBitmap.getWidth());
+        return croppedBitmap;
+    }
+
     private void customShuffle(){
 //        0 2 15 3 4 1 5 7 12 8 6 10 13 14 9 11
         ArrayList<Integer> tempCells = new ArrayList<Integer>();
@@ -321,5 +375,36 @@ public class Game_medium extends AppCompatActivity {
             }
         }
         return i;
+    }
+
+    private class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
+        ImageView bmImage;
+
+        public DownloadImageTask(ImageView bmImage) {
+            this.bmImage = bmImage;
+        }
+
+        protected Bitmap doInBackground(String... urls) {
+            String urldisplay = urls[0];
+            Bitmap mIcon11 = null;
+            try {
+                InputStream in = new URL(urldisplay).openStream();
+                mIcon11 = BitmapFactory.decodeStream(in);
+            } catch (Exception e) {
+                Log.e("Error", e.getMessage());
+                e.printStackTrace();
+            }
+            return mIcon11;
+        }
+
+        protected void onPostExecute(Bitmap result) {
+            bmImage.setImageBitmap(result);
+            try {
+                puzzleImage = getByteArray();
+                initialize();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

@@ -15,7 +15,13 @@
         android:src="@drawable/info_icon"
         android:background="@android:color/transparent"
         android:layout_alignParentRight="true"
-        android:layout_alignParentBottom="true"/>
+        android:layout_alignParentBottom="true"
+        android:visibility="invisible"/>
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="invisible"
+        android:id="@+id/tempImage"/>
 
     <TextView
         android:layout_width="wrap_content"
