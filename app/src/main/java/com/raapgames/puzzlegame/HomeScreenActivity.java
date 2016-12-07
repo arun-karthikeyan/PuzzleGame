@@ -1,6 +1,7 @@
 package com.raapgames.puzzlegame;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -10,6 +11,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
@@ -26,6 +28,8 @@ import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.games.Games;
+import com.google.android.gms.games.GamesActivityResultCodes;
+import com.google.android.gms.games.GamesStatusCodes;
 import com.google.android.gms.games.multiplayer.Invitation;
 import com.google.android.gms.games.multiplayer.Multiplayer;
 import com.google.android.gms.games.multiplayer.OnInvitationReceivedListener;
@@ -82,6 +86,11 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
 
     // Request code used to invoke sign in user interactions.
     private static final int RC_SIGN_IN = 9001;
+
+    // Request codes for the UIs that we show with startActivityForResult:
+    final static int RC_SELECT_PLAYERS = 10000;
+    final static int RC_INVITATION_INBOX = 10001;
+    final static int RC_WAITING_ROOM = 10002;
 
     // This array lists all the individual screens our game has.
     final static int[] SCREENS = {
@@ -238,6 +247,73 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
         }
         else {
             switchToScreen(R.id.sign_in_screen);
+        }
+    }
+
+    // Broadcast my score to everybody else.
+    void broadcastScore(boolean finalScore) {
+        if (!mMultiplayer)
+            return; // playing single-player mode
+
+        // First byte in message indicates whether it's a final score or not
+        mMsgBuf[0] = (byte) (finalScore ? 'F' : 'U');
+
+        // Second byte is the score.
+        mMsgBuf[1] = (byte) mScore;
+
+        // Send to every other participant.
+        for (Participant p : mParticipants) {
+            if (p.getParticipantId().equals(mMyId))
+                continue;
+            if (p.getStatus() != Participant.STATUS_JOINED)
+                continue;
+            if (finalScore) {
+                // final score notification must be sent via reliable message
+                Games.RealTimeMultiplayer.sendReliableMessage(mGoogleApiClient, null, mMsgBuf,
+                        mRoomId, p.getParticipantId());
+            } else {
+                // it's an interim score notification, so we can use unreliable
+                Games.RealTimeMultiplayer.sendUnreliableMessage(mGoogleApiClient, mMsgBuf, mRoomId,
+                        p.getParticipantId());
+            }
+        }
+    }
+
+    // Start the gameplay phase of the game.
+    void startGame(boolean multiplayer) {
+        mMultiplayer = multiplayer;
+//        updateScoreDisplay();
+        broadcastScore(false);
+//        switchToScreen(R.id.screen_game);
+
+//        findViewById(R.id.button_click_me).setVisibility(View.VISIBLE);
+
+        // run the gameTick() method every second to update the game.
+        final Handler h = new Handler();
+        h.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (mSecondsLeft <= 0)
+                    return;
+                gameTick();
+                h.postDelayed(this, 1000);
+            }
+        }, 1000);
+    }
+
+    // Game tick -- update countdown, check if game ended.
+    void gameTick() {
+        if (mSecondsLeft > 0)
+            --mSecondsLeft;
+
+        // update countdown
+//        ((TextView) findViewById(R.id.countdown)).setText("0:" +
+//                (mSecondsLeft < 10 ? "0" : "") + String.valueOf(mSecondsLeft));
+
+        if (mSecondsLeft <= 0) {
+            // finish game
+//            findViewById(R.id.button_click_me).setVisibility(View.GONE);
+            broadcastScore(true);
         }
     }
 
@@ -490,23 +566,48 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
     }
 
     @Override
-    public void onRoomCreated(int i, Room room) {
+    public void onRoomCreated(int statusCode, Room room) {
+    Log.d(LOG_TAG, "Entered onRoomCreated");
+        Log.d(LOG_TAG, "onRoomCreated(" + statusCode + ", " + room + ")");
+        if (statusCode != GamesStatusCodes.STATUS_OK) {
+            Log.e(LOG_TAG, "*** Error: onRoomCreated, status " + statusCode);
+            showGameError();
+            return;
+        }
 
+        // save room ID so we can leave cleanly before the game starts.
+        mRoomId = room.getRoomId();
+
+        // show the waiting room UI
+        showWaitingRoom(room);
+    }
+
+    // Show the waiting room UI to track the progress of other players as they enter the
+    // room and get connected.
+    void showWaitingRoom(Room room) {
+        // minimum number of players required for our game
+        // For simplicity, we require everyone to join the game before we start it
+        // (this is signaled by Integer.MAX_VALUE).
+        final int MIN_PLAYERS = Integer.MAX_VALUE;
+        Intent i = Games.RealTimeMultiplayer.getWaitingRoomIntent(mGoogleApiClient, room, MIN_PLAYERS);
+
+        // show waiting room UI
+        startActivityForResult(i, RC_WAITING_ROOM);
     }
 
     @Override
     public void onJoinedRoom(int i, Room room) {
-
+        Log.d(LOG_TAG, "Entered onJoinedRoom");
     }
 
     @Override
     public void onLeftRoom(int i, String s) {
-
+        Log.d(LOG_TAG, "Entered onLeftRoom");
     }
 
     @Override
     public void onRoomConnected(int i, Room room) {
-
+        Log.d(LOG_TAG, "Entered onRoomConnected");
     }
 
     @Override
@@ -514,7 +615,7 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
                                  Intent intent){
 
         super.onActivityResult(requestCode, responseCode, intent);
-
+        Log.d(LOG_TAG, "Reached on activity result");
         switch(requestCode){
             case RC_SIGN_IN:
                 Log.d(LOG_TAG, "onActivityResult with requestCode == RC_SIGN_IN, responseCode="
@@ -525,6 +626,22 @@ public class HomeScreenActivity extends AppCompatActivity implements GoogleApiCl
                     mGoogleApiClient.connect();
                 } else {
                     BaseGameUtils.showActivityResultError(this,requestCode,responseCode, R.string.signin_other_error);
+                }
+                break;
+            case RC_WAITING_ROOM:
+                // we got the result from the "waiting room" UI.
+                if (responseCode == Activity.RESULT_OK) {
+                    // ready to start playing
+                    Log.d(LOG_TAG, "Starting game (waiting room returned OK).");
+                    startGame(true);
+                } else if (responseCode == GamesActivityResultCodes.RESULT_LEFT_ROOM) {
+                    // player indicated that they want to leave the room
+                    leaveRoom();
+                } else if (responseCode == Activity.RESULT_CANCELED) {
+                    // Dialog was cancelled (user pressed back key, for instance). In our game,
+                    // this means leaving the room too. In more elaborate games, this could mean
+                    // something else (like minimizing the waiting room UI).
+                    leaveRoom();
                 }
                 break;
         }
