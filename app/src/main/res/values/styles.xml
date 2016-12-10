@@ -1,7 +1,7 @@
 <resources>
 
     <color name="BlurbColor">#a0a0a0</color>
-    <color name="AccentColor">#0033cc</color>
+    <color name="AccentColor">#3b5998</color>
     <color name="ButtonTextColor">#ffffff</color>
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">

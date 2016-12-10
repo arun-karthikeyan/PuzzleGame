@@ -297,8 +297,9 @@ public class Game_small extends AppCompatActivity {
             }
         }
         Toast.makeText(Game_small.this,"we have a winner",Toast.LENGTH_LONG).show();
-        Intent intent = new Intent(this.getBaseContext(), PictureSelectActivity.class);
-        SystemClock.sleep(3000);
+
+        Intent intent = new Intent(this.getBaseContext(), SuccessActivity.class);
+        intent.putExtra("movesMade",moveCounter.getText().toString());
         this.startActivity(intent);
     }
 

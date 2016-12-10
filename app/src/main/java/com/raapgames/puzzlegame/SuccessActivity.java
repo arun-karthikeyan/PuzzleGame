@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
 
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
@@ -19,10 +21,6 @@ import com.facebook.share.model.ShareOpenGraphContent;
 import com.facebook.share.model.ShareOpenGraphObject;
 import com.facebook.share.model.SharePhoto;
 import com.facebook.share.widget.ShareButton;
-import com.facebook.share.widget.ShareDialog;
-
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Created by anandh on 12/4/16.
@@ -32,10 +30,13 @@ public class SuccessActivity extends AppCompatActivity
 {
     private ShareButton shareButton;
     private CallbackManager callbackManager;
+    private TextView movesMade;
+    private Button mainMenu;
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+
         FacebookSdk.sdkInitialize(getApplicationContext(), new FacebookSdk.InitializeCallback(){
             @Override
             public void onInitialized()
@@ -44,16 +45,7 @@ public class SuccessActivity extends AppCompatActivity
                 {
                     Log.d("AccessTokenPresent","here");
                     Log.d("UserID:",AccessToken.getCurrentAccessToken().getUserId());
-                }
-                else
-                {
-                    Log.d("initializing","login");
-                    LoginManager.getInstance().logInWithPublishPermissions(SuccessActivity.this, Arrays.asList("publish_actions"));
-
-                }
-                for (String temp: AccessToken.getCurrentAccessToken().getPermissions())
-                {
-                    Log.d("permission",temp);
+                    LoginManager.getInstance().logOut();
                 }
             }
         });
@@ -63,10 +55,14 @@ public class SuccessActivity extends AppCompatActivity
         AppEventsLogger.activateApp(getApplication());
         callbackManager= CallbackManager.Factory.create();
         shareButton = (ShareButton) findViewById(R.id.shareButton);
+        movesMade = (TextView) findViewById(R.id.success_display);
+        mainMenu = (Button) findViewById(R.id.main_menu);
+        String message = this.getIntent().getStringExtra("movesMade");
+        movesMade.setText("You solved the puzzle in "+message+" moves");
 
         SharePhoto photo = new SharePhoto.Builder().setBitmap(BitmapFactory.decodeResource(getResources(),R.drawable.feature_graphic)).build();
         ShareOpenGraphObject object = new ShareOpenGraphObject.Builder().putString("og:title","Congrats!!").putString("og:type","game.achievement").putString("fb:app_id",getResources().getString(R.string.facebook_app_id))
-                .putString("og:description","Play this puzzle and beat this score!").putInt("game:points",1000).putPhoto("og:image",photo).build();
+                .putString("og:description","Solved puzzle in "+message+" moves").putInt("game:points",1000).putPhoto("og:image",photo).build();
         ShareOpenGraphAction action = new ShareOpenGraphAction.Builder()
                 .setActionType("games.celebrate")
                 .putObject("game", object)
@@ -78,13 +74,13 @@ public class SuccessActivity extends AppCompatActivity
 
         ShareApi.share(content,null);
         shareButton.setShareContent(content);
-        /*shareButton.setOnClickListener(new View.OnClickListener(){
-
+        mainMenu.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                Log.d("Before click","here");
+                Intent intent = new Intent(getBaseContext(),HomeScreenActivity.class);
+                startActivity(intent);
             }
-        });*/
+        });
     }
     @Override
     protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {

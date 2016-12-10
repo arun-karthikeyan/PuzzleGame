@@ -359,8 +359,8 @@ public class Game_medium extends AppCompatActivity {
             }
         }
         Toast.makeText(Game_medium.this,"we have a winner",Toast.LENGTH_LONG).show();
-        Intent intent = new Intent(this.getBaseContext(), PictureSelectActivity.class);
-        SystemClock.sleep(2000);
+        Intent intent = new Intent(this.getBaseContext(), SuccessActivity.class);
+        intent.putExtra("movesMade",moveCounter.getText().toString());
         this.startActivity(intent);
     }
 

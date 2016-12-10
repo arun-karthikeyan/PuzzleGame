@@ -1,13 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:layout_gravity="center_vertical|center_horizontal|center"
+    >
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="250px"
+        android:id="@+id/congrats"
+        android:text="Congrats!"
+        android:textSize="190px"
+        android:layout_gravity="center_vertical|center_horizontal|center"
+        android:layout_margin="20dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="100px"
+        android:id="@+id/success_display"
+        android:text=""
+        android:textSize="60px"
+        android:layout_gravity="center_vertical|center_horizontal|center"
+        android:layout_margin="20dp"/>
 
     <com.facebook.share.widget.ShareButton
     android:id="@+id/shareButton"
-    android:layout_width="200dp"
-    android:layout_height="70dp"
+    android:layout_width="150dp"
+    android:layout_height="40dp"
     android:layout_gravity="center_vertical|center_horizontal|center"
     android:layout_margin="20dp" />
+
+    <Button android:id="@+id/main_menu"
+        android:layout_width="150dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center_vertical|center_horizontal|center"
+        android:layout_margin="20dp"
+        style="@style/MainScreenButton"
+        android:text="Main menu" />
 
 </LinearLayout>
